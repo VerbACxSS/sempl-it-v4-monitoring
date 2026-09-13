@@ -1,0 +1,4 @@
+FROM mysql:9.4.0
+
+# Set the no-root user
+USER mysql:mysql

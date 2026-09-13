@@ -1,0 +1,11 @@
+FROM phpmyadmin:5.2.2-apache
+
+## Create no-root user
+RUN useradd -m pma && usermod -a -G pma pma
+
+# Change ownership of phpMyAdmin files to the new user
+RUN chown -R pma:pma /etc/phpmyadmin \
+    && chown -R pma:pma /var/www/html
+
+# Set the no-root user
+USER pma:pma

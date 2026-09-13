@@ -1,0 +1,4 @@
+services:
+  sempl-it-monitoring-database:
+    ports:
+      - '20050:3306'

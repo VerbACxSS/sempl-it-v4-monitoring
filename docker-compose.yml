@@ -1,0 +1,60 @@
+services:
+  sempl-it-monitoring:
+    container_name: 'sempl-it-monitoring'
+    image: 'sempl-it-monitoring'
+    build:
+      context: '.'
+      dockerfile: 'Dockerfile'
+    restart: 'unless-stopped'
+    ports:
+      - '10050:30050'
+    environment:
+      - 'PYTHONUNBUFFERED=1'
+      - 'MONITORING_API_KEY=${MONITORING_API_KEY:-123456789}'
+      - 'MYSQL_HOST=sempl-it-monitoring-database'
+      - 'MYSQL_PORT=3306'
+      - 'MYSQL_USER=${MYSQL_USER:-sempl-it-user}'
+      - 'MYSQL_PASSWORD=${MYSQL_PASSWORD:-sempl-it-password}'
+      - 'MYSQL_DATABASE=${MYSQL_DATABASE:-sempl-it-database}'
+    healthcheck:
+      test: [ 'CMD', 'curl', '--fail', 'http://localhost:30050/api/v1/healthcheck' ]
+
+  sempl-it-monitoring-pma:
+    container_name: 'sempl-it-monitoring-pma'
+    image: 'sempl-it-monitoring-pma'
+    build:
+      context: '.'
+      dockerfile: 'Dockerfile-pma'
+    restart: 'unless-stopped'
+    ports:
+      - '20050:80'
+    environment:
+      - 'PMA_HOST=sempl-it-monitoring-database'
+      - 'PMA_PORT=3306'
+      - 'PMA_ARBITRARY=0'
+    depends_on:
+      sempl-it-monitoring-database:
+        condition: service_healthy
+    healthcheck:
+      test: [ 'CMD', 'curl', '--fail', 'http://localhost:80/index.php' ]
+
+  sempl-it-monitoring-database:
+    container_name: 'sempl-it-monitoring-database'
+    image: 'sempl-it-monitoring-database'
+    build:
+      context: '.'
+      dockerfile: 'Dockerfile-mysql'
+    restart: 'unless-stopped'
+    volumes:
+      - 'sempl-it-monitoring-database-volume:/var/lib/mysql'
+    environment:
+      - 'MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root-password}'
+      - 'MYSQL_USER=${MYSQL_USER:-sempl-it-user}'
+      - 'MYSQL_PASSWORD=${MYSQL_PASSWORD:-sempl-it-password}'
+      - 'MYSQL_DATABASE=${MYSQL_DATABASE:-sempl-it-database}'
+    healthcheck:
+      test: [ "CMD", 'mysqladmin', 'ping', '-h', 'localhost', '-u', '$$MYSQL_USER', '-p$$MYSQL_PASSWORD' ]
+
+volumes:
+  sempl-it-monitoring-database-volume:
+   driver: 'local'
