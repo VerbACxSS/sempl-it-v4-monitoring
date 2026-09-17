@@ -16,6 +16,9 @@ services:
       - 'MYSQL_USER=${MYSQL_USER:-sempl-it-user}'
       - 'MYSQL_PASSWORD=${MYSQL_PASSWORD:-sempl-it-password}'
       - 'MYSQL_DATABASE=${MYSQL_DATABASE:-sempl-it-database}'
+    depends_on:
+      sempl-it-monitoring-database:
+        condition: service_healthy
     healthcheck:
       test: [ 'CMD', 'curl', '--fail', 'http://localhost:30050/api/v1/healthcheck' ]
 
